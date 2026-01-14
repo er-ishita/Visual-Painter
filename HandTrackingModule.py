@@ -37,9 +37,25 @@ class HandDetector():
                 handLms.append([id,cx,cy])
 
         return handLms
-
     
+    def getFingers(self,handlms):
+        fingers=[]
 
+        if len(handlms)>=21:
+            if(handlms[4][1]<handlms[3][1]):
+                fingers.append(1)
+            else:
+                fingers.append(0)
+            
+            fing=[8,12,16,20]
+            for i in fing:
+                if(handlms[i][2]<handlms[i-2][2]):
+                    fingers.append(1)
+                else:
+                    fingers.append(0)
+            
+        return fingers
+        
 def main():
     cam=cv2.VideoCapture(0)
     ptime=0
@@ -53,13 +69,17 @@ def main():
         img=cv2.flip(img, 1)
         img=htm.findHands(img)
         handlms=htm.findPosition(img)
+        fingers=htm.getFingers(handlms)
+        
+        if len(fingers)!=0:
+            print(fingers)
 
         ctime=time.time()
         fps=int(1/(ctime-ptime))
         ptime=ctime
 
-        if len(handlms)!=0:
-            print(handlms[4])
+        # if len(handlms)!=0:
+        #     print(handlms[4])
 
         cv2.putText(img,f'FPS: {fps}',(10,70),1,cv2.FONT_HERSHEY_COMPLEX_SMALL,(0,0,255),3)
 
