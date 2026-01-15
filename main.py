@@ -63,6 +63,7 @@ while True:
     ##selection mode
     if len(fingers)!=0:
         if (fingers[0] and fingers[1] and fingers[2] and fingers[3] and fingers[4]):
+            xp,yp=0,0
             overlay=images[1]
             brushColor=(0,0,0)
         elif(fingers[1] and fingers[2] and fingers[3]==0  and fingers[4]==0):
@@ -74,7 +75,7 @@ while True:
             ##640-850- blue
             if(x>640 and x<850 and y>0 and y<125):
                 overlay=images[0]
-                brushColor=(255,0,0)
+                brushColor=(255,100,0)
             #980-1190-  green
             if(x>980 and x<1190 and y>0 and y<125):
                 overlay=images[2]
@@ -85,17 +86,23 @@ while True:
     if len(fingers)!=0:
         if ((fingers[0]==0) and fingers[1] and (fingers[2]==0) and (fingers[3]==0) and (fingers[4]==0)):
             x,y=handlms[8][1],handlms[8][2]
-            cv2.circle(img, (x, y), brushThickness, brushColor, cv2.FILLED)
-            if xp == 0 and yp == 0:
+            cv2.circle(img, (x, y), 30, brushColor, cv2.FILLED)
+            if xp == 0 or yp == 0:
                 xp, yp = x, y
             if(brushColor==(0,0,0)):
                 cv2.line(canvas, (xp, yp), (x, y), brushColor, eraserThickness)
             else:
                 cv2.line(canvas, (xp, yp), (x, y), brushColor, brushThickness)
             xp,yp=x,y
-    else:
-        xp,yp=0,0
+        else:
+            xp,yp=0,0
     
+
+    imgGray=cv2.cvtColor(canvas,cv2.COLOR_BGR2GRAY)
+    _,imInverse=cv2.threshold(imgGray,50,255,cv2.THRESH_BINARY_INV)
+    imInverse=cv2.cvtColor(imInverse,cv2.COLOR_GRAY2BGR)
+    img=cv2.bitwise_and(img,imInverse)
+    img=cv2.bitwise_or(img,canvas)
 
     overlay = cv2.resize(overlay, (1280, 125))
     img[0:125,0:1280]=overlay
@@ -103,7 +110,7 @@ while True:
     cv2.putText(img, f'FPS: {fps}', (10,700),1,cv2.FONT_HERSHEY_COMPLEX,(0,0,255),3)
 
     cv2.imshow("WebCam",img)
-    cv2.imshow("Canvas",canvas)
+    # cv2.imshow("Canvas",canvas)
     if cv2.waitKey(1) & 0xff==ord('q'):
         print("Quiting...")
         break
