@@ -3,12 +3,17 @@ import mediapipe as mp
 import time
 import HandTrackingModule as htm
 import os
+import numpy as np
 
 ###########################
 camheight=720
 camwidth=1280
 
-brushColor=(255,255,255)
+brushColor=(0,0,0)
+brushThickness = 25
+eraserThickness = 100
+
+canvas = np.zeros((720, 1280, 3), np.uint8)
 
 ptime=0
 xp,yp=0,0
@@ -59,9 +64,10 @@ while True:
     if len(fingers)!=0:
         if (fingers[0] and fingers[1] and fingers[2] and fingers[3] and fingers[4]):
             overlay=images[1]
-            brushColor=(255,255,255)
+            brushColor=(0,0,0)
         elif(fingers[1] and fingers[2] and fingers[3]==0  and fingers[4]==0):
             x,y=handlms[8][1],handlms[8][2]
+            x2, y2 = handlms[12][1:]
             if(x>280 and x<550 and y>0 and y<125):
                 overlay=images[3]
                 brushColor=(0,0,255)
@@ -72,10 +78,23 @@ while True:
             #980-1190-  green
             if(x>980 and x<1190 and y>0 and y<125):
                 overlay=images[2]
-                brushColor=(0,0,255)
-        
-
+                brushColor=(0,255,0)
+            cv2.rectangle(img, (x, y-25), (x2, y2 + 25), brushColor, cv2.FILLED)        
+    
     ##draw mode
+    if len(fingers)!=0:
+        if ((fingers[0]==0) and fingers[1] and (fingers[2]==0) and (fingers[3]==0) and (fingers[4]==0)):
+            x,y=handlms[8][1],handlms[8][2]
+            cv2.circle(img, (x, y), brushThickness, brushColor, cv2.FILLED)
+            if xp == 0 and yp == 0:
+                xp, yp = x, y
+            if(brushColor==(0,0,0)):
+                cv2.line(canvas, (xp, yp), (x, y), brushColor, eraserThickness)
+            else:
+                cv2.line(canvas, (xp, yp), (x, y), brushColor, brushThickness)
+            xp,yp=x,y
+    else:
+        xp,yp=0,0
     
 
     overlay = cv2.resize(overlay, (1280, 125))
@@ -84,6 +103,7 @@ while True:
     cv2.putText(img, f'FPS: {fps}', (10,700),1,cv2.FONT_HERSHEY_COMPLEX,(0,0,255),3)
 
     cv2.imshow("WebCam",img)
+    cv2.imshow("Canvas",canvas)
     if cv2.waitKey(1) & 0xff==ord('q'):
         print("Quiting...")
         break
